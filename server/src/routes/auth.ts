@@ -1,5 +1,7 @@
 import express from "express";
 import { body, validationResult } from "express-validator";
+import User from "../models/user";
+import bcrypt from "bcryptjs";
 
 const router = express.Router();
 
@@ -20,14 +22,36 @@ router.post(
         };
       });
 
-      return res.json({ errors });
+      return res.json({ errors, data: null });
     }
 
     const { email, password } = req.body;
-    res.json({
+
+    // get the email from the request body
+    const user = await User.findOne({ email });
+
+    // if email exist send this message
+    if (user) {
+      return res.json({
+        error: [
+          {
+            msg: "Email already exist",
+          },
+        ],
+        data: null,
+      });
+    }
+
+// crypt the password using bcryptjs
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+
+    const newUser = await User.create({
       email,
-      password,
+      password: hashedPassword,
     });
+
+    res.json(user);
   }
 );
 
