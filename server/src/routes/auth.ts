@@ -42,6 +42,7 @@ router.post(
       });
     }
 
+    
 // crypt the password using bcryptjs
     const hashedPassword = await bcrypt.hash(password, 10);
 
