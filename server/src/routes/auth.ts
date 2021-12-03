@@ -2,6 +2,7 @@ import express from "express";
 import { body, validationResult } from "express-validator";
 import User from "../models/user";
 import bcrypt from "bcryptjs";
+import JWT from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -42,18 +43,89 @@ router.post(
       });
     }
 
-    
-// crypt the password using bcryptjs
+    // crypt the password using bcryptjs
     const hashedPassword = await bcrypt.hash(password, 10);
-
 
     const newUser = await User.create({
       email,
       password: hashedPassword,
     });
 
-    res.json(user);
+    // creating the token
+    const token = await JWT.sign(
+      { email: newUser.email },
+      process.env.JWT_SECRET as string,
+      //Specify when this token expire
+      {
+        expiresIn: 370000,
+      }
+    );
+
+    // Return back data
+    res.json({
+      errors: [],
+      data: {
+        token,
+        user: {
+          id: newUser._id,
+          email: newUser.email,
+        },
+      },
+    });
   }
 );
+// Creating a request for login in
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validating if the user even exisit with that email
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.json({
+      error: [
+        {
+          msg: "Invalids credentials",
+        },
+      ],
+      data: null,
+    });
+  }
+
+  // compare the password
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    return res.json({
+      errors: [
+        {
+          msg: "Invalids credentials",
+        },
+      ],
+      data: null,
+    });
+  }
+
+  // creat the token
+  const token = await JWT.sign(
+    { email: user.email },
+    process.env.JWT_SECRET as string,
+    //Specify when this token expire
+    {
+      expiresIn: 370000,
+    }
+  );
+
+  return res.json({
+    errors: [],
+    data: {
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+      },
+    },
+  });
+});
 
 export default router;
