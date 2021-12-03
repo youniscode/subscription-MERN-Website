@@ -1,8 +1,18 @@
+
+### Signin
 POST http://localhost:8080/auth/signup
 Content-Type: application/json
 
 {
-  "email": "jonasjonas@gmail.com",
-  "password": "newpasspasswill"
+  "email": "kokokokok@gmail.com",
+  "password": "freeeboook"
 }
 
+### Login
+POST http://localhost:8080/auth/login
+Content-type: application/json
+
+{
+  "email": "kokokokok@gmail.com",
+  "password": "freeeboook"
+}
